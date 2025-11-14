@@ -1,0 +1,9 @@
+{
+  _id: ObjectId("..."),
+  name: "Vaidehi",
+  email: "vaidehi@gmail.com",
+  passwordHash: "$2b$10$hsjsu...hashedPassword...",
+  avatarUrl: "https://...",
+  createdAt: ISODate("2025-11-10T09:00:00.000Z"),
+  updatedAt: ISODate("2025-11-10T09:00:00.000Z")
+}
