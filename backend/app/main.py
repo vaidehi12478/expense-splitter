@@ -2,9 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, users, group, expenses, settlement
 from app.database import db
-import dotenv
-
-port = dotenv.get_key(".env", "PORT") or 8080
 
 app = FastAPI(
     title="Expense Splitter API",
