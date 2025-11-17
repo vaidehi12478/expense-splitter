@@ -39,12 +39,3 @@ app.include_router(settlement.router)
 @app.get("/")
 def home():
     return {"message": "Welcome to Expense Splitter API"}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=int(port),
-        reload=True
-    )
