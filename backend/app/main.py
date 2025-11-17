@@ -20,7 +20,8 @@ app.add_middleware(
         "http://localhost:5173",      # Vite dev server
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
-        "http://localhost:8000",      # For testing
+        "http://localhost:8000",
+        "https://expense-splitter-mz62-lwxilebol-vaidehis-projects-bb453c40.vercel.app"    # For testing
     ],
     allow_credentials=True,
     allow_methods=["*"],              # Allow all methods (GET, POST, PUT, DELETE, OPTIONS, etc)
