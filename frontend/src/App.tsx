@@ -8,6 +8,7 @@ import { isAuthenticated } from "./lib/auth";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import Groups from "./pages/Groups";
 import CreateGroup from "./pages/CreateGroup";
 import GroupDetail from "./pages/GroupDetail";
 import NotFound from "./pages/NotFound";
@@ -33,6 +34,7 @@ const App = () => (
           
           {/* Protected Routes */}
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
           <Route path="/groups/create" element={<ProtectedRoute><CreateGroup /></ProtectedRoute>} />
           <Route path="/groups/:id" element={<ProtectedRoute><GroupDetail /></ProtectedRoute>} />
           

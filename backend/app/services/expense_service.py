@@ -7,6 +7,7 @@ from typing import List
 def create_expense(payload: ExpenseCreate) -> ExpenseBase:
     expense_doc = {
         "amount": payload.amount,
+        "description": payload.description,
         "paidBy": payload.paidBy,
         "groupId": payload.groupId,
         "category": payload.category,
@@ -22,6 +23,7 @@ def create_expense(payload: ExpenseCreate) -> ExpenseBase:
     return ExpenseBase(
         id=str(result.inserted_id),
         amount=payload.amount,
+        description=payload.description,
         paidBy=payload.paidBy,
         groupId=payload.groupId,
         category=payload.category,
@@ -38,6 +40,7 @@ def get_group_expenses(group_id: str) -> List[ExpenseBase]:
         expenses.append(ExpenseBase(
             id=str(expense["_id"]),
             amount=expense["amount"],
+            description=expense.get("description"),
             paidBy=expense["paidBy"],
             groupId=expense["groupId"],
             category=expense["category"],
@@ -59,6 +62,7 @@ def get_user_expenses(user_email: str) -> List[ExpenseBase]:
         expenses.append(ExpenseBase(
             id=str(expense["_id"]),
             amount=expense["amount"],
+            description=expense.get("description"),
             paidBy=expense["paidBy"],
             groupId=expense["groupId"],
             category=expense["category"],
@@ -77,6 +81,7 @@ def get_expense_by_id(expense_id: str) -> ExpenseBase:
     return ExpenseBase(
         id=str(expense["_id"]),
         amount=expense["amount"],
+        description=expense.get("description"),
         paidBy=expense["paidBy"],
         groupId=expense["groupId"],
         category=expense["category"],

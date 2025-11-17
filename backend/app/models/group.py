@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 # -------- request models ---------
 class GroupCreate(BaseModel):
@@ -17,7 +17,7 @@ class GroupBase(BaseModel):
     id: str
     name: str
     description: Optional[str] = None
-    members: list[EmailStr] = []
+    members: List[Dict[str, Any]] = []  # List of dicts with name and email
     createdBy: EmailStr
     createdAt: datetime
 

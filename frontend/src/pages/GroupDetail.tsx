@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Users, DollarSign, UserPlus, Loader2, Calculator, CheckCircle } from 'lucide-react';
+import { Plus, Users, DollarSign, UserPlus, Loader2, Calculator, CheckCircle, Trash2 } from 'lucide-react';
 import { groupsApi, expensesApi, settlementsApi } from '@/services/api';
 import type { Group, Expense, Settlement, CalculatedSettlement } from '@/types';
 import { toast } from 'sonner';
@@ -30,6 +30,9 @@ export default function GroupDetail() {
   const [createExpenseOpen, setCreateExpenseOpen] = useState(false);
   const [calculatingSettlements, setCalculatingSettlements] = useState(false);
   const [recordingSettlements, setRecordingSettlements] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [expenseDetailsOpen, setExpenseDetailsOpen] = useState(false);
+  const [deletingExpense, setDeletingExpense] = useState(false);
   const user = getStoredUser();
 
   useEffect(() => {
@@ -132,6 +135,26 @@ export default function GroupDetail() {
     }
   };
 
+  const handleDeleteExpense = async () => {
+    if (!selectedExpense) return;
+
+    setDeletingExpense(true);
+    
+    try {
+      await expensesApi.delete(selectedExpense.id);
+      toast.success('Expense deleted successfully!');
+      setExpenseDetailsOpen(false);
+      setSelectedExpense(null);
+      loadData();
+    } catch (error: any) {
+      console.error('Error deleting expense:', error);
+      const message = error.response?.data?.detail || 'Failed to delete expense';
+      toast.error(message);
+    } finally {
+      setDeletingExpense(false);
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -226,10 +249,10 @@ export default function GroupDetail() {
                 </DialogHeader>
                 <ExpenseForm
                   groupId={id!}
-                  members={group.members.map((email: string) => ({
-                    id: email,
-                    name: email.split('@')[0],
-                    email: email
+                  members={group.members.map((member) => ({
+                    id: member.email,
+                    name: member.name,
+                    email: member.email
                   }))}
                   onSuccess={() => {
                     setCreateExpenseOpen(false);
@@ -253,7 +276,7 @@ export default function GroupDetail() {
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {group.members.map((member) => (
-                <Badge key={member.id} variant="secondary" className="text-sm py-1.5 px-3">
+                <Badge key={member.email} variant="secondary" className="text-sm py-1.5 px-3">
                   {member.name} ({member.email})
                 </Badge>
               ))}
@@ -268,7 +291,7 @@ export default function GroupDetail() {
             <TabsTrigger value="settlements">Settlements</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="expenses" className="space-y-4 mt-6">
+          <TabsContent value="expenses" className="space-y-4 mt-6 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
             {expenses.length === 0 ? (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12 text-center">
@@ -288,7 +311,14 @@ export default function GroupDetail() {
             ) : (
               <div className="space-y-3">
                 {expenses.map((expense) => (
-                  <Card key={expense.id}>
+                  <Card 
+                    key={expense.id}
+                    className="cursor-pointer hover:shadow-lg transition-shadow"
+                    onClick={() => {
+                      setSelectedExpense(expense);
+                      setExpenseDetailsOpen(true);
+                    }}
+                  >
                     <CardContent className="pt-6">
                       <div className="flex flex-col sm:flex-row justify-between gap-4">
                         <div className="flex-1">
@@ -325,7 +355,7 @@ export default function GroupDetail() {
             )}
           </TabsContent>
 
-          <TabsContent value="settlements" className="space-y-4 mt-6">
+          <TabsContent value="settlements" className="space-y-4 mt-6 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
             <div className="flex gap-2 mb-4">
               <Button
                 onClick={handleCalculateSettlements}
@@ -439,6 +469,154 @@ export default function GroupDetail() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Expense Details Dialog */}
+        <Dialog open={expenseDetailsOpen} onOpenChange={setExpenseDetailsOpen}>
+          <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Expense Details</DialogTitle>
+            </DialogHeader>
+            
+            <div className="flex-1 overflow-y-auto pr-4">
+              {selectedExpense && (
+                <div className="space-y-6">
+                  {/* Amount */}
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-1">Total Amount</p>
+                    <p className="text-4xl font-bold text-primary">
+                      {formatCurrency(selectedExpense.amount)}
+                    </p>
+                  </div>
+
+                  {/* Details */}
+                  <div className="space-y-4">
+                    {/* Description */}
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Description</p>
+                      <p className="text-foreground">{selectedExpense.description || 'N/A'}</p>
+                    </div>
+
+                    {/* Category */}
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Category</p>
+                      <Badge variant="secondary">{selectedExpense.category}</Badge>
+                    </div>
+
+                    {/* Paid By */}
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Paid By</p>
+                      <p className="text-foreground font-medium">{selectedExpense.paidBy}</p>
+                    </div>
+
+                    {/* Split Type */}
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Split Type</p>
+                      <Badge variant="outline" className="capitalize">
+                        {selectedExpense.splitType}
+                      </Badge>
+                    </div>
+
+                    {/* Date */}
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Date</p>
+                      <p className="text-foreground">{formatDate(selectedExpense.date)}</p>
+                    </div>
+
+                    {/* Split Details */}
+                    {selectedExpense.splitType === 'equal' && !selectedExpense.splits && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Split Details</p>
+                        <p className="text-sm text-foreground">
+                          Equally divided among <strong>ALL {group?.members.length} group members</strong>
+                        </p>
+                        <p className="text-sm font-medium mt-2">
+                          Each person owes: <span className="text-primary">{formatCurrency(selectedExpense.amount / (group?.members.length || 1))}</span>
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedExpense.splitType === 'equal' && selectedExpense.splits && Object.keys(selectedExpense.splits).length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Split Details</p>
+                        <p className="text-sm text-foreground mb-2">
+                          Equally divided among <strong>{Object.keys(selectedExpense.splits).length} participating members</strong>
+                        </p>
+                        <div className="space-y-2">
+                          {Object.keys(selectedExpense.splits).map((email) => (
+                            <div key={email} className="flex justify-between items-center p-2 bg-muted rounded">
+                              <span className="text-sm text-foreground">{email}</span>
+                              <span className="font-medium">{formatCurrency(selectedExpense.amount / Object.keys(selectedExpense.splits!).length)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedExpense.splitType === 'unequal' && selectedExpense.splits && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Split Details (Specific Amounts)</p>
+                        <div className="space-y-2">
+                          {Object.entries(selectedExpense.splits).map(([email, amount]) => (
+                            <div key={email} className="flex justify-between items-center p-2 bg-muted rounded">
+                              <span className="text-sm text-foreground">{email}</span>
+                              <span className="font-medium">{formatCurrency(amount as number)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedExpense.splitType === 'percentage' && selectedExpense.splits && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Split Details (By Percentage)</p>
+                        <div className="space-y-2">
+                          {Object.entries(selectedExpense.splits).map(([email, percentage]) => (
+                            <div key={email} className="flex justify-between items-center p-2 bg-muted rounded">
+                              <span className="text-sm text-foreground">{email}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">{percentage}%</span>
+                                <span className="font-medium">{formatCurrency((selectedExpense.amount * (percentage as number)) / 100)}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Created At */}
+                    <div className="pt-4 border-t">
+                      <p className="text-xs text-muted-foreground">
+                        Created {new Date(selectedExpense.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+
+                    {/* Delete Button */}
+                    <div className="pt-4 border-t">
+                      <Button
+                        variant="destructive"
+                        className="w-full gap-2"
+                        onClick={handleDeleteExpense}
+                        disabled={deletingExpense}
+                      >
+                        {deletingExpense ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Deleting...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-4 w-4" />
+                            Delete Expense
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

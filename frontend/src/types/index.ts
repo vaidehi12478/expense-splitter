@@ -4,11 +4,16 @@ export interface User {
   email: string;
 }
 
+export interface GroupMember {
+  name: string;
+  email: string;
+}
+
 export interface Group {
   id: string;
   name: string;
   description: string;
-  members: string[];
+  members: GroupMember[];
   createdAt: string;
 }
 

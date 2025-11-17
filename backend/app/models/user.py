@@ -27,3 +27,12 @@ class UserBase(BaseModel):
 
     class Config:
         orm_mode = True    # important for return types
+
+
+class UserDetail(BaseModel):
+    """Lightweight user detail model for group members"""
+    name: str
+    email: EmailStr
+
+    class Config:
+        orm_mode = True
