@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, users, group, expenses, settlement
 from app.database import db
+import dotenv
+
+port = dotenv.get_key(".env", "PORT") or 8080
 
 app = FastAPI(
     title="Expense Splitter API",
@@ -36,3 +39,12 @@ app.include_router(settlement.router)
 @app.get("/")
 def home():
     return {"message": "Welcome to Expense Splitter API"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=int(port),
+        reload=True
+    )
